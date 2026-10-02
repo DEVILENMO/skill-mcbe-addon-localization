@@ -2,37 +2,40 @@
 
 Microsoft Learn「Comprehensive Pack Contents」所列语言码。本地化时 `texts/{code}.lang` 与 `languages.json` 须一致。
 
-| 代码 | 名称 | 署名后缀模板 |
-|------|------|-------------|
-| `zh_CN` | 简体中文 | `（{credit}汉化）` |
-| `zh_TW` | 繁體中文 | `（{credit}漢化）` |
-| `en_US` | 英语（美国） | `({credit} Localization)` |
-| `en_GB` | 英语（英国） | `({credit} Localization)` |
-| `ja_JP` | 日语 | `（{credit}翻訳）` |
-| `ko_KR` | 韩语 | `({credit} 번역)` |
-| `de_DE` | 德语 | `({credit} Localization)` |
-| `fr_FR` | 法语 | `({credit} Localization)` |
-| `fr_CA` | 法语（加拿大） | `({credit} Localization)` |
-| `es_ES` | 西班牙语 | `({credit} Localization)` |
-| `es_MX` | 西班牙语（墨西哥） | `({credit} Localization)` |
-| `pt_BR` | 葡萄牙语（巴西） | `({credit} Localization)` |
-| `pt_PT` | 葡萄牙语 | `({credit} Localization)` |
-| `it_IT` | 意大利语 | `({credit} Localization)` |
-| `nl_NL` | 荷兰语 | `({credit} Localization)` |
-| `ru_RU` | 俄语 | `({credit} Localization)` |
-| `uk_UA` | 乌克兰语 | `({credit} Localization)` |
-| `pl_PL` | 波兰语 | `({credit} Localization)` |
-| `cs_CZ` | 捷克语 | `({credit} Localization)` |
-| `sk_SK` | 斯洛伐克语 | `({credit} Localization)` |
-| `hu_HU` | 匈牙利语 | `({credit} Localization)` |
-| `tr_TR` | 土耳其语 | `({credit} Localization)` |
-| `sv_SE` | 瑞典语 | `({credit} Localization)` |
-| `da_DK` | 丹麦语 | `({credit} Localization)` |
-| `nb_NO` | 挪威语 | `({credit} Localization)` |
-| `fi_FI` | 芬兰语 | `({credit} Localization)` |
-| `el_GR` | 希腊语 | `({credit} Localization)` |
-| `bg_BG` | 保加利亚语 | `({credit} Localization)` |
-| `id_ID` | 印尼语 | `({credit} Localization)` |
+> 署名后缀**不在本表维护**：统一见 [SKILL.md 步骤 4](../SKILL.md#步骤-4本地化者署名)。
+> 本表只列语言码，避免两处模板打架。
+
+| 代码 | 名称 |
+|------|------|
+| `zh_CN` | 简体中文 |
+| `zh_TW` | 繁體中文 |
+| `en_US` | 英语（美国） |
+| `en_GB` | 英语（英国） |
+| `ja_JP` | 日语 |
+| `ko_KR` | 韩语 |
+| `de_DE` | 德语 |
+| `fr_FR` | 法语 |
+| `fr_CA` | 法语（加拿大） |
+| `es_ES` | 西班牙语 |
+| `es_MX` | 西班牙语（墨西哥） |
+| `pt_BR` | 葡萄牙语（巴西） |
+| `pt_PT` | 葡萄牙语 |
+| `it_IT` | 意大利语 |
+| `nl_NL` | 荷兰语 |
+| `ru_RU` | 俄语 |
+| `uk_UA` | 乌克兰语 |
+| `pl_PL` | 波兰语 |
+| `cs_CZ` | 捷克语 |
+| `sk_SK` | 斯洛伐克语 |
+| `hu_HU` | 匈牙利语 |
+| `tr_TR` | 土耳其语 |
+| `sv_SE` | 瑞典语 |
+| `da_DK` | 丹麦语 |
+| `nb_NO` | 挪威语 |
+| `fi_FI` | 芬兰语 |
+| `el_GR` | 希腊语 |
+| `bg_BG` | 保加利亚语 |
+| `id_ID` | 印尼语 |
 
 默认目标语言：`zh_CN`
 

@@ -5,18 +5,21 @@ description: >-
   minecraft:display_name to lang keys, translates .lang files and languages.json,
   localizes behavior-pack script UI strings, handles hardcoded data-layer strings
   (enum/config constants, nameTags, logic-id vs display-label separation via
-  localization.js display maps), applies translator credit suffixes, and optionally
-  retextures in-image text. Use when localizing MCBE addons, fixing incomplete
+  localization.js display maps), applies the translator credit suffix to pack
+  names, and localizes in-image text (image-edit repaint, or optional OCR
+  erase-and-rewrite). Use when localizing MCBE addons, fixing incomplete
   target lang where .lang is done but in-game text is still English, editing
   Script API forms, or ARC item colors.
 license: MIT
 compatibility: >-
   Works with any agent that can read/write local files. Optional: Node.js
-  for JS syntax validation (node --check). Image localization needs a
-  vision-capable model. No specific IDE required.
+  for JS syntax validation (node --check) and Pillow plus a CJK font for the
+  OCR write-back path. Image repaint needs a vision-capable model; the OCR
+  path needs none beyond the agent itself. Never assumes a specific local
+  model or toolchain is installed - probe first. No specific IDE required.
 metadata:
   author: DEVILENMO
-  version: "1.2.0"
+  version: "1.3.0"
   homepage: https://github.com/DEVILENMO/skill-mcbe-addon-localization
   tags: minecraft,bedrock,mcbe,addon,mod,localization,translation,i18n,lang,汉化
 ---
@@ -34,8 +37,8 @@ metadata:
 - 翻译行为包脚本中的玩家可见字符串（表单、聊天提示等）
 - **`.lang` 已译但游戏内仍显示英文**（枚举名、配置 label、状态文案、NPC 名牌等）
 - 区分 **logic id** 与 **display label**，建立显示名映射模块
-- 为包名添加译者署名后缀
-- 本地化贴图上的英文文字（guidebook 等）
+- 为包名添加译者署名后缀（含工具署名）
+- 本地化贴图上的英文文字（guidebook 等），走图生图重绘或 OCR 写回
 
 **不使用：**
 
@@ -52,8 +55,11 @@ metadata:
 | `target_language` | MCBE 语言码，如 `zh_CN`（默认） |
 | `resource_pack_path` | 资源包根目录（可选） |
 | `behavior_pack_path` | 行为包根目录（可选） |
-| `translator_credit` | 译者名，默认 `DEVILENMO` |
+| `translator_credit` | 译者/品牌名，**必填，执行前必须向使用者询问**，不要默认写死 |
 | 至少 RP 或 BP 之一 | 两者通常成对存在 |
+
+`translator_credit` 决定包名后缀（步骤 4）。不同使用者的署名不同，
+**开工前问清楚**，不要拿文档里的示例值直接写进包。
 
 ## 输出要求
 
@@ -62,8 +68,10 @@ metadata:
 1. 各步骤处理数量（标准化 display_name 数、翻译 lang 条数、脚本替换处数、硬编码映射条数等）
 2. 修改的文件列表（相对包根目录）
 3. **硬编码层**：显示名映射模块（如 `localization.js`）、已处理的常量类别（枚举/配置/NPC/状态…）
-4. 跳过/回退项及原因（含「保留英文逻辑键」项）
-5. 待用户手动处理的残留项（若有）
+4. **署名**：用了哪个 `{credit}`、最终包名后缀长什么样
+5. **贴图**（如做了步骤 6）：处理几张/跳过几张、走哪条路线、尺寸或 alpha 不符的项
+6. 跳过/回退项及原因（含「保留英文逻辑键」项）
+7. 待用户手动处理的残留项（若有）
 
 ## 包结构
 
@@ -94,7 +102,7 @@ metadata:
 - [ ] 3b. 硬编码数据层本地化（Script 包必查）
 - [ ] 4. 本地化者署名
 - [ ] 5. 同步包文件夹名（可选）
-- [ ] 6. 图片本地化（独立，按需）
+- [ ] 6. 图片本地化（独立，按需；含可选 OCR 写回）
 - [ ] 7. 打包导出 .mcaddon / .mcpack（分发）
 ```
 
@@ -247,15 +255,29 @@ LLM 提示词见 [references/translation-prompts.md](references/translation-prom
 
 ## 步骤 4：本地化者署名
 
-在目标语言 `.lang` 的 `pack.name` 后追加后缀（先剥旧后缀）：
+在目标语言 `.lang` 的 `pack.name` 后追加后缀（**先剥掉已有旧后缀**，避免重复叠加）。
 
-| 语言码 | 后缀模板 |
-|--------|----------|
-| `zh_CN` | `（{credit}汉化）` |
-| `zh_TW` | `（{credit}漢化）` |
-| `ja_JP` | `（{credit}翻訳）` |
-| `ko_KR` | `({credit} 번역)` |
-| 其它 | `({credit} Localization)` |
+后缀由两个槽位拼成：
+
+| 槽位 | 取值 |
+|------|------|
+| `{credit}` | **译者/品牌名 —— 每次执行前向使用者询问**，不要写死 |
+| `{brand}` | 工具署名，默认 `with 弧光自动汉化skill` |
+
+| 语言码 | 后缀模板 | 示例（`{credit}` = 弧光） |
+|--------|----------|--------------------------|
+| `zh_CN` | `{credit}汉化 {brand}` | `弧光汉化 with 弧光自动汉化skill` |
+| `zh_TW` | `{credit}漢化 {brand}` | `弧光漢化 with 弧光自動漢化skill` |
+| `ja_JP` | `{credit}翻訳 {brand}` | `弧光翻訳 with 弧光自動漢化skill` |
+| `ko_KR` | `{credit} 번역 {brand}` | `弧光 번역 with 弧光自動漢化skill` |
+| 其它 | `{credit} Localization {brand}` | `ArcLight Localization with 弧光自動漢化skill` |
+
+**规则：**
+
+- `{credit}` 用使用者给的名字，**没问就不许写**，也不许沿用上一单的名字
+- `{brand}` 是本 skill 的固定署名，标注汉化由哪个流程产出
+- 改文案**只改这张表**，不要散落到别的文件
+- 若使用者不想要 `{brand}`，置空即可（模板里留一个空格容错）
 
 若 manifest `header.name` 已是 `pack.name`，署名仅改 lang 即可在游戏内生效。
 
@@ -271,10 +293,26 @@ LLM 提示词见 [references/translation-prompts.md](references/translation-prom
 
 ## 步骤 6：图片本地化（独立）
 
-- 只处理用户指定的图片；原图备份到同目录 `_backup/`
-- 写回**必须**保持原像素宽高（含非正方形）
+**完整指南：** [references/image-localization.md](references/image-localization.md)
+
+### 铁律
+
+- 只处理使用者点名的图；原图备份到同目录 `_backup/`
+- **像素宽高必须与原图完全一致**（含非正方形）——不一致就不写回
+- **保留 alpha 通道**、保持 PNG；只改文字，不动画幅与图案
 - 优先处理路径含 `book`/`guide` 或文件名含 `page` 的目录（guidebook 贴图）
-- 提示：只改图上文字，不改画幅与图案
+
+### 两条路线（先探测，再选）
+
+| 路线 | 适用 | 依赖 |
+|------|------|------|
+| **A. 图生图 / 局部编辑重绘** | 文字多、要求整体画风统一、能接受轻微重绘 | 一个支持参考图输入的模型（本地或云端皆可） |
+| **B. OCR → 擦除 → 写回（可选）** | 像素画 / UI 贴图 / 要求像素级保真 / 没有可用生图模型 | 无强制依赖：bbox 可由多模态模型直接给出，也可接 tesseract / PaddleOCR / Surya |
+
+**不要假设使用者装了任何特定模型。** 开工前先问「你手上有哪些图生图模型或服务」，
+并按 [环境探测](references/image-localization.md#环境探测) 确认；没有就转路线 B 或如实跳过。
+提示词按能力写（"能吃参考图的模型"），不要写死具体模型名或本地权重路径——
+详见 [references/translation-prompts.md](references/translation-prompts.md)。
 
 ---
 
@@ -312,6 +350,8 @@ item.arc:example.name=§9生命药水
 6. **display label**：UI / nameTag / 插值 已走 `getDisplayName()` 或等价映射
 7. **颜色码**：ARC 物品检查 `§` 前缀
 8. **双包同步**：RP 与 BP 的 `texts/` 键对齐；lang 与脚本 fallback 映射一致
+9. **署名**：`{credit}` 已向使用者确认；旧后缀先剥除；`{brand}` 在位；未沿用上一单的名字
+10. **贴图**（如做了步骤 6）：宽高与 alpha 未变；`OCR` 写回时中文不是豆腐块；未处理项已列明
 
 ## 辅助操作（非核心）
 

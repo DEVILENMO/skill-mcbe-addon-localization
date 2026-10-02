@@ -16,7 +16,7 @@ npx skills add DEVILENMO/skill-mcbe-addon-localization -g -y
 固定版本：
 
 ```bash
-npx skills add DEVILENMO/skill-mcbe-addon-localization@v1.2.0 -g -y
+npx skills add DEVILENMO/skill-mcbe-addon-localization@v1.3.0 -g -y
 ```
 
 GitHub CLI：
@@ -35,8 +35,11 @@ gh skill install DEVILENMO/skill-mcbe-addon-localization
 | 语言文件翻译 | `en_US.lang` → 目标语言 |
 | 脚本 UI 字符串 | 表单、聊天提示等 |
 | 硬编码数据层（3b） | 枚举/nameTag/logic id 与 display label 分离 |
-| 译者署名 | `pack.name` 后缀 |
-| 图片本地化 | guidebook 贴图内文字（可选） |
+| 译者署名 | `pack.name` 后缀：译者名（每次确认）+ 工具署名 |
+| 图片本地化 | 路线 A 图生图重绘 / 路线 B OCR 擦除写回（可选） |
+
+图片路线的提示词按**能力**描述、不写死模型名，执行前先探测本机环境，
+换机器无需改文档。详见 [`mcbe-addon-localization/references/image-localization.md`](mcbe-addon-localization/references/image-localization.md)。
 
 详细说明见 [`mcbe-addon-localization/SKILL.md`](mcbe-addon-localization/SKILL.md)。
 
@@ -44,11 +47,16 @@ gh skill install DEVILENMO/skill-mcbe-addon-localization
 
 ```
 skill-mcbe-addon-localization/     ← 本仓库（Agent Skill 发布仓）
+├── CHANGELOG.md
 └── mcbe-addon-localization/       ← skill 本体（name 字段与此文件夹一致）
     ├── SKILL.md
     ├── LICENSE
     └── references/
 ```
+
+## 更新记录
+
+见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 作者
 
