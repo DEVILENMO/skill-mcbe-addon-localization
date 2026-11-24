@@ -386,7 +386,7 @@ item.arc:example.name=§9生命药水
 
 开始编辑前确认：
 
-1. **顺序**：Display Name → lang → 脚本 → **硬编码数据层 (3b)** → 署名
+1. **顺序**：Display Name → **隐式键 (1b)** → lang → 脚本 → **硬编码数据层 (3b)** → 署名
 2. **键一致**：JSON 中的 lang key 在 `en_US.lang` 与目标 `.lang` 均存在
 3. **manifest**：`header.name` 应为 `pack.name`，不是字面量
 4. **脚本**：不破坏引号/括号；`${}` 计数一致
