@@ -9,7 +9,8 @@ description: >-
   names, and localizes in-image text (image-edit repaint, or optional OCR
   erase-and-rewrite). Use when localizing MCBE addons, fixing incomplete
   target lang where .lang is done but in-game text is still English, editing
-  Script API forms, or ARC item colors.
+  Script API forms, or ARC item colors. Also completes the implicit lang keys
+  the game looks up by id (entity/item/tile/spawn egg/rideable exit hints).
 license: MIT
 compatibility: >-
   Works with any agent that can read/write local files. Optional: Node.js
@@ -19,7 +20,7 @@ compatibility: >-
   model or toolchain is installed - probe first. No specific IDE required.
 metadata:
   author: DEVILENMO
-  version: "1.3.0"
+  version: "1.4.0"
   homepage: https://github.com/DEVILENMO/skill-mcbe-addon-localization
   tags: minecraft,bedrock,mcbe,addon,mod,localization,translation,i18n,lang,汉化
 ---
@@ -87,6 +88,10 @@ metadata:
 ```
 
 `manifest.json` 可能含 JSONC 注释（`//`、`/* */`），解析时需支持。
+**作者包还常带尾逗号** —— MCBE 自己的解析器容忍，严格 `JSON.parse` 会失败。
+审计 / 校验脚本必须用宽松解析：剥注释 → 严格解析失败 → 去尾逗号再解析；
+**解析失败的文件要列进报告，不能静默跳过**。「解析失败就跳过」等于给自己留一个
+看不见的盲区，实测漏掉过实体的 `entity.*.name` 与它的刷怪蛋键。
 
 典型安装路径（Windows）：
 
@@ -97,6 +102,7 @@ metadata:
 ```
 - [ ] 0. 规范化 JSON / JS（可选但推荐）
 - [ ] 1. Display Name 标准化
+- [ ] 1b. 隐式键补全（实体/物品/方块/刷怪蛋/离船提示/创造栏分组）
 - [ ] 2. 语言文件翻译
 - [ ] 3. 脚本提示本地化（仅 BP）
 - [ ] 3b. 硬编码数据层本地化（Script 包必查）
@@ -106,9 +112,15 @@ metadata:
 - [ ] 7. 打包导出 .mcaddon / .mcpack（分发）
 ```
 
-**核心五步** = 1 → 2 → 3 → **3b** → 4。步骤 1 会写入 lang 键，步骤 2 统一翻译；**不要**先翻脚本再改 display_name。
+**核心六步** = 1 → **1b** → 2 → 3 → **3b** → 4。步骤 1/1b 会写入 lang 键，步骤 2 统一翻译；**不要**先翻脚本再改 display_name。
 
 **常见误区：** 步骤 2 完成后 target `.lang` 很长，但只做了步骤 3 的字面量替换，漏掉 **constants / 配置表 / nameTag / translate 插值变量** —— 玩家仍会反馈「汉化不全」。凡 BP 含 `scripts/` 且玩家可见文案来自数据层，**必须执行 3b**（详见 [references/hardcoded-strings.md](references/hardcoded-strings.md)）。
+
+**第二个常见误区：** 步骤 1 只处理 JSON 里**显式写着的** `minecraft:display_name`。
+游戏还会**按 id 自己拼键**去查 lang（实体 / 物品 / 方块 / 刷怪蛋 / 离船提示 / 创造栏分组），
+这一步漏掉时 lang 覆盖率可以 100%，游戏里照样印原始键 —— 实测玩家连续三次反馈
+「还是英文」，三次全部来自这一族。**必须执行 1b**
+（见 [references/implicit-keys.md](references/implicit-keys.md)）。
 
 ---
 
@@ -142,6 +154,34 @@ identifier 格式：`namespace:id`（须含 `:`）。
 
 ---
 
+## 步骤 1b：隐式键补全
+
+步骤 1 只处理 JSON 里**显式**写着的 `minecraft:display_name`。游戏还会**按 id 拼键**
+去 lang 查名字，这一族键必须单独补齐 —— 否则 lang 覆盖率可以 100%，
+游戏里照样印原始键。
+
+**完整键表、判定依据、官方措辞基准、审计脚本模板、验收口径：**
+[references/implicit-keys.md](references/implicit-keys.md)
+
+速查：
+
+| 键 | 触发条件 |
+|----|---------|
+| `entity.<ns>:<id>.name` / `item.<ns>:<id>.name` / `tile.<ns>:<id>.name` | BP 实体 / 物品 / 方块 |
+| `item.spawn_egg.entity.<ns>:<id>.name` | BP 实体 `is_spawnable: true` |
+| `action.hint.exit.<ns>:<id>` + `.console.` 变体 | BP 实体有 `minecraft:rideable` |
+| `<ns>:itemGroup.name.<group>` | `menu_category.group` 指向自定义组 |
+
+两个最容易错的判定依据：
+
+- **刷怪蛋看 `is_spawnable`，不看 RP 的 `spawn_egg` 块** —— RP 那个块只决定蛋的图标
+- **离船提示看 `minecraft:rideable`**
+
+命名与措辞**以原版官方语言文件为基准**（`<游戏安装目录>\data\resource_packs\vanilla\texts\zh_CN.lang`），
+不要凭印象翻 —— 原版 13000+ 条键是官方简中用词的权威来源。
+
+---
+
 ## 步骤 2：语言文件翻译
 
 对 RP 与 BP **分别**执行：
@@ -156,6 +196,10 @@ identifier 格式：`namespace:id`（须含 `:`）。
 - 目标值与 `en_US` 相同 → 待译（目标为 `en_US`/`en_GB` 时跳过）
 - 无 `en_US` 对照，或文本字符集不像目标语言 → 待译
 - 拉丁语系互译：主要靠与 `en_US` 对比
+
+**措辞基准：** 译名有疑问时去**原版官方语言文件**查同一条键的官方译法
+（`<游戏安装目录>\data\resource_packs\vanilla\texts\{lang}.lang`），不要凭印象翻 ——
+实测原版 13420 条中文键里「小船」出现 0 次，「小船」是民间叫法不是官方译名。
 
 **写回规则：**
 
@@ -352,6 +396,9 @@ item.arc:example.name=§9生命药水
 8. **双包同步**：RP 与 BP 的 `texts/` 键对齐；lang 与脚本 fallback 映射一致
 9. **署名**：`{credit}` 已向使用者确认；旧后缀先剥除；`{brand}` 在位；未沿用上一单的名字
 10. **贴图**（如做了步骤 6）：宽高与 alpha 未变；`OCR` 写回时中文不是豆腐块；未处理项已列明
+11. **隐式键**（1b）：实体 / 物品 / 方块 / 刷怪蛋 / 离船提示 / 创造栏分组逐族反查，无缺项
+12. **解析失败**：宽松解析后仍失败的文件已列入报告，未被静默跳过
+13. **验收口径**：不用「lang 覆盖率 100%」当完成标准 —— 隐式键应有集合与实际键集合的差集必须为空
 
 ## 辅助操作（非核心）
 

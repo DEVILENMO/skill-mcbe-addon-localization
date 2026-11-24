@@ -14,6 +14,7 @@ mcbe-addon-localization/
 └── references/
     ├── file-formats.md           # .lang / manifest 格式
     ├── hardcoded-strings.md      # 脚本硬编码与 localization.js 模式
+    ├── implicit-keys.md          # 游戏按 id 隐式查的 lang 键 + 官方措辞基准
     ├── image-localization.md     # 贴图文字：重绘路线 + OCR 写回路线 + 环境探测
     ├── translation-prompts.md    # LLM 提示词模板
     └── language-codes.md         # MCBE 29 语言码
@@ -27,8 +28,13 @@ mcbe-addon-localization/
 4. **硬编码数据层（3b）** — 枚举/配置常量、nameTag、logic id 与 display label 分离、`getDisplayName()` 映射
 5. **译者署名** — `pack.name` 后缀（译者名每次向使用者确认 + 工具署名）
 6. **图片本地化**（可选）— 路线 A 图生图重绘 / 路线 B OCR 擦除写回
+7. **隐式键补全（1b）** — 游戏按 id 拼的 lang 键：实体 / 物品 / 方块 / 刷怪蛋 / 离船提示 / 创造栏分组
 
 带 Script API 的包：**`.lang` 翻完不等于汉化完成**。须识别 logic id 与 display label，执行步骤 3b，详见 [references/hardcoded-strings.md](references/hardcoded-strings.md)。
+
+同理，**`.lang` 覆盖率 100% 也不等于游戏里没有原始键** —— 游戏还会按 id 自己拼键去查
+（实体 / 物品 / 方块 / 刷怪蛋 / 离船提示 / 创造栏分组），必须执行步骤 1b，
+详见 [references/implicit-keys.md](references/implicit-keys.md)。
 
 ## 跨机器可移植性
 
